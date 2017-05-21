@@ -10,7 +10,6 @@ library(org.Hs.eg.db)
 
 columns(org.Hs.eg.db)
 ls("package:org.Hs.eg.db")
-
 ?org.Hs.egCHRLOC
 
 
@@ -48,6 +47,7 @@ nrow(new.entrez.id)
 #############
 ##Convert original entrez ID to chromosomal location
 
+##
 acc.locus.id<- acc.ncv %>% dplyr::select(Locus.ID)
 dim(acc.locus.id)
 
@@ -75,29 +75,32 @@ select(org.Hs.eg.db, k, columns = c("CHRLOC", "SYMBOL"), keytype = "ENTREZID")
 select(org.Hs.eg.db, k, columns = c("TXSTART"), keytype = "ENTREZID")
 ??genes
 
+## from: RNA-seq Data Analysis: A Practical Approach. By Eija Korpelainen, Jarno Tuimala, Panu Somervuo, Mikael Huss, Garry Wong
+#(https://books.google.co.uk/books?id=u5fNBQAAQBAJ&pg=PA229&lpg=PA229&dq=org.Hs.egCHRLOC+columns&source=bl&ots=RK7s4k5kyl&sig=2ma2_Hun96OYiNEXBzZ8ACPLcL4&hl=en&sa=X&ved=0ahUKEwidvKzwpYHUAhWlBcAKHdbFA8gQ6AEIQTAF#v=onepage&q=org.Hs.egCHRLOC%20columns&f=false)
 
-## Having problems using select
+sig<- c("ENSG00000099622", "ENSG00000114737", "ENSG00000105254", "ENSG00000104879", "ENSG00000237289")
+         
+keys<- keys(org.Hs.eg.db, keytype = "ENSEMBL")
+keys
+columns<- c("CHR", "CHRLOC", "CHRLOCEND")
+sel<- select(org.Hs.eg.db, keys, columns, keytype = "ENSEMBL")
+View(sel)
+sel2<- sel[sel$ENSEMBL %in% sig,]
+sel2
 
-##Using Bimap...not sure what to do next?
+sel3<- na.omit(sel2[!duplicated(sel2$ENSEMBL), ])
+sel3
 
-## Bimap interface:
-x <- org.Hs.egCHRLOC
-# Get the entrez gene identifiers that are mapped to chromosome locations
-mapped_genes <- mappedkeys(x)
-mapped_genes
-# Convert to a list
-xx <- as.list(x[mapped_genes])
-xx
-if(length(xx) > 0) {
-  # Get the CHRLOC for the first five genes
-  xx[1:5]
-  # Get the first one
-  xx[[1]]
-}
+sel3$strand<- ifelse(sel3$CHRLOC <0, "-", "+")
+sel3
+sel3$start<- abs(sel3$CHRLOC)
+sel3$end<- abs(sel3$CHRLOCEND)
+sel3
+
 
 
 ###########
-##convert new entrez ID to chromosaomal location
+##convert new entrez ID to chromosomal location
 
 
 
@@ -112,7 +115,7 @@ if(length(xx) > 0) {
 
 
 ############
-## Use Biomart to get all human genes
+## Use Biomart to get all human genes (https://github.com/stephenturner/annotables)
 
 library(biomaRt)
 library(dplyr)
