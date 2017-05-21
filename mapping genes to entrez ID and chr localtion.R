@@ -35,7 +35,7 @@ columns(org.Hs.eg.db)
 gene.name<- acc.ncv$Gene.Symbol
 gene.name[198:240]
 
-##Remove ENSG name from some gene name entries
+##Remove ensembl ENSG name from some gene name entries
 gene.name<- gsub("\\|.*","",gene.name)
 gene.name[198:240]
 
@@ -97,14 +97,61 @@ sel3$start<- abs(sel3$CHRLOC)
 sel3$end<- abs(sel3$CHRLOCEND)
 sel3
 
+##Better attempt
 
+keys<- keys(org.Hs.eg.db, keytype = "ENTREZID")
+keys
+columns<- c("CHR", "CHRLOC", "CHRLOCEND")
+sel<- select(org.Hs.eg.db, keys, columns, keytype = "ENTREZID")
+View(sel)
+dim(sel)
+
+acc.locus.id<- acc.cnv$Locus.ID
+length(acc.locus.id)
+
+sel2<- sel[sel$ENTREZID %in% acc.locus.id,]
+sel2
+dim(sel2)
+
+sel3<- na.omit(sel2[!duplicated(sel2$ENTREZID), ])
+sel3
+dim(sel3)
+
+sel3$strand<- ifelse(sel3$CHRLOC <0, "-", "+")
+sel3
+sel3$start<- abs(sel3$CHRLOC)
+sel3$end<- abs(sel3$CHRLOCEND)
+head(sel3)
+dim(sel3)
 
 ###########
 ##convert new entrez ID to chromosomal location
 
+keys<- keys(org.Hs.eg.db, keytype = "ENTREZID")
+keys
+columns<- c("CHR", "CHRLOC", "CHRLOCEND")
+sel<- select(org.Hs.eg.db, keys, columns, keytype = "ENTREZID")
+View(sel)
+dim(sel)
 
+new.acc.locus.id<- new.entrez.id$ENTREZID
+length(new.acc.locus.id)
 
-#.......
+new.sel2<- sel[sel$ENTREZID %in% new.acc.locus.id,]
+new.sel2
+dim(new.sel2)
+
+new.sel3<- na.omit(sel2[!duplicated(sel2$ENTREZID), ])
+new.sel3
+dim(new.sel3)
+dim(sel3)
+
+new.sel3$strand<- ifelse(new.sel3$CHRLOC <0, "-", "+")
+new.sel3
+new.sel3$start<- abs(new.sel3$CHRLOC)
+new.sel3$end<- abs(new.sel3$CHRLOCEND)
+head(new.sel3)
+dim(new.sel3)
 
 
 
