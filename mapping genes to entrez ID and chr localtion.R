@@ -12,6 +12,11 @@ columns(org.Hs.eg.db)
 ls("package:org.Hs.eg.db")
 ?org.Hs.egCHRLOC
 
+pack<-org.Hs.egCHRLOC
+pack
+columns(pack)
+
+
 
 
 gene=c("PRKAR1A", "PRKCB")
@@ -19,6 +24,11 @@ gene=c("PRKAR1A", "PRKCB")
 ?org.Hs.egALIAS2EG
 org.Hs.egALIAS2EG
 unlist(mget(x=gene,envir=org.Hs.egALIAS2EG))
+entrez<- c("387509", "390992")
+unlist(mget(x=entrez,envir=org.Hs.egCHRLOC))
+
+mget(get(ex[1], revmap(org.Hs.egENSEMBL)), org.Hs.egSYMBOL)
+
 
 ###################
 ## Load data
@@ -180,6 +190,7 @@ fix_genes <- . %>%
 
 myattributes <- c("ensembl_gene_id",
                   "entrezgene",
+                  "hgnc_symbol",
                   "external_gene_name",
                   "chromosome_name",
                   "start_position",
@@ -195,6 +206,26 @@ grch38 <- useMart("ensembl") %>%
   #fix_genes
 View(grch38)
 
+dplyr::filter(grch38, entrezgene == 387509)
+
+k<- c(-6, 116983, 140625, 375790, 441869, 55210)
+
+rows.of.interest<- which(grch38$entrezgene %in% k)
+
+grch38[rows.of.interest,]
+
+
+myattributes <- c("ensembl_gene_id",
+                  "entrezgene",
+                  "external_gene_name",
+                  "chromosome_name",
+                  "start_position",
+                  "end_position",
+                  "strand",
+                  "gene_biotype",
+                  "description")
+
+which(!(grch38$hgnc_symbol == grch38$external_gene_name))
 
 
 #############
@@ -223,6 +254,7 @@ k
 select(hgu95av2.db, keys = k, columns = c("SYMBOL", "GENENAME"), keytype = "PROBEID")
 
 mapIds(hgu95av2.db, keys = k, column = c("GENENAME"), keytype = "PROBEID")
+
 
 ## OrgDb and select method
 
