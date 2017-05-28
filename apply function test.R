@@ -147,7 +147,7 @@ new.function<- function(x,y){
   
 }
 
-system.time(test5<- lapply(CNV.data, function(x) {new.function(x, acc.cnv.chr.location)}))
+system.time(test5<- lapply(CNV.data, function(x) {new.function2(x, acc.cnv)}))
 
 
 ##########
@@ -219,15 +219,27 @@ head(output[[1]][,1:12])
 
 ############
 ##multi-core test 3:
+##ONly one that works:
 
 new.function2<- function(x,y){
   
-  x %>% dplyr::full_join(y[,1:8],., by = "Locus.ID") %>%
-  events.per.cytoband(., threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE) %>%
-  return(.[[2]]$proportion.of.deletions)
+  z<- x %>% dplyr::full_join(y[,1:8],., by = "Locus.ID") %>%
+  events.per.cytoband(., threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE)
+  return(z[[2]]$proportion.of.deletions)
+  
+}
+new.function6<- function(x,y){
+  
+dplyr::full_join(y[,1:8],x, by = "Locus.ID")
   
 }
 
+new.function7<- function(x){
+  
+  z<- events.per.cytoband(x, threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE)
+  return(z[[2]]$proportion.of.deletions)
+  
+}
 
 library(parallel)
 
@@ -241,12 +253,18 @@ cl <- makeCluster(no_cores)
 cl
 
 clusterExport(cl, "acc.cnv")
+clusterExport(cl, "new.function")
 clusterExport(cl, "new.function2")
+clusterExport(cl, "new.function6")
+clusterExport(cl, "new.function7")
 clusterExport(cl, "events.per.cytoband")
 clusterEvalQ(cl, library(dplyr))
 
 test5=vector(length=38)
+system.time(test5<- parLapply(cl, CNV.data, function(x) {new.function(x, acc.cnv)}))
 system.time(test5<- parLapply(cl, CNV.data, function(x) {new.function2(x, acc.cnv)}))
+system.time(test5<- parLapply(cl, CNV.data, function(x) {new.function6(x, acc.cnv)}))
+system.time(test5<- parLapply(cl, test5, function(x) {new.function7(x)}))
 
 stopCluster(cl)
 
@@ -275,8 +293,35 @@ pheatmap(test6,
          #annotation_legend = FALSE
 )
 
+############
+##multi-core test 4:
 
 
+new.function<- function(x){
+  
+  z<- dplyr::full_join(acc.cnv[,1:8],x, by = "Locus.ID")
+  cytoband.list<- events.per.cytoband(z, threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE)
+  return(cytoband.list[[2]]$proportion.of.deletions)
+  
+}
+
+new.function3<- function(x){
+  
+  dplyr::full_join(acc.cnv[,1:8],x, by = "Locus.ID") %>%
+  events.per.cytoband(threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE) %>%
+  return(.[[2]]$proportion.of.deletions)
+  
+}
+
+system.time(test7 <- mclapply(X=CNV.data, FUN=new.function, mc.cores=19))
+system.time(test7 <- mclapply(X=CNV.data, FUN=new.function3, mc.cores=4))
+#####
+
+test8<- mclapply(X=CNV.data, FUN=function(x) dplyr::full_join(acc.cnv[,1:8],x, by = "Locus.ID"), mc.cores=4)
+test9<- mclapply(X=test8, FUN=events.per.cytoband(x, threshold = -1, cytoband_column = 10, column_data_start = 11, chromosome_interval = 0,  deletion = TRUE),x, by = "Locus.ID"), mc.cores=4))
+new.function4<-function(x) {dplyr::full_join(acc.cnv[,1:8],x, by = "Locus.ID")}
+test8<- mclapply(CNV.data, new.function4, mc.cores=4)
+new.function5<-function(x) {}
 ##############
 ##Old method:
 
