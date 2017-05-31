@@ -346,19 +346,33 @@ system.time(a <- quickadd(g))
 
 
 
+#################
+###selecting columns
+##https://gist.githubusercontent.com/djhocking/62c76e63543ba9e94ebe/raw/f234a1f3fdba8d2daf249bd3ba1b1583ec5ee76c/dplyr-select-names.R
 
+one <- seq(1:10)
+two <- rnorm(10)
+three <- runif(10, 1, 2)
+four <- -10:-1
 
+df <- data.frame(one, two, three)
+df2 <- data.frame(one, two, three, four)
 
+str(df)
 
+names.df <- colnames(df)
+names.df.2 <- c("one", "two", "three")
 
+#install.packages("dplyr")
+library(dplyr)
 
+select_(df2, names.df)           # no - only first variable name
+select_(df2, names.df.2)         # no - only first variable name
+select(df2, one_of(names.df))    # success
+select(df2, one_of(names.df.2))  # success
 
-
-
-
-
-
-
+select_(df2, .dots = names.df)
+#vignette("nse") to understand more about .dots and select_
 
 
 
